@@ -120,6 +120,11 @@ dim(filter(repdt,is.na(steps)))[1]
 ```
 
 ### 2. Fill missing values with mean of interval
+#### We use the following strategy here to input missing data
+##### a. Compute the average steps/day across all days for each interval and store in a temp var
+##### b. Make a copy of the original data set
+##### c. Loop through each item in the copy of the data set and check if steps is N/A
+##### d. If NA, use the corresponding interval to reference the temp var and populate N/A with mean
 
 ```r
 # group data by interval, compute mean of steps, and store in a temp variable

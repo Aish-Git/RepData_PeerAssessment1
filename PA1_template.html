@@ -154,6 +154,19 @@ dim(filter(repdt,is.na(steps)))[1]</code></pre>
 </div>
 <div id="fill-missing-values-with-mean-of-interval" class="section level3">
 <h3>2. Fill missing values with mean of interval</h3>
+<div id="we-use-the-following-strategy-here-to-input-missing-data" class="section level4">
+<h4>We use the following strategy here to input missing data</h4>
+<div id="a.-compute-the-average-stepsday-across-all-days-for-each-interval-and-store-in-a-temp-var" class="section level5">
+<h5>a. Compute the average steps/day across all days for each interval and store in a temp var</h5>
+</div>
+<div id="b.-make-a-copy-of-the-original-data-set" class="section level5">
+<h5>b. Make a copy of the original data set</h5>
+</div>
+<div id="c.-loop-through-each-item-in-the-copy-of-the-data-set-and-check-if-steps-is-na" class="section level5">
+<h5>c. Loop through each item in the copy of the data set and check if steps is N/A</h5>
+</div>
+<div id="d.-if-na-use-the-corresponding-interval-to-reference-the-temp-var-and-populate-na-with-mean" class="section level5">
+<h5>d. If NA, use the corresponding interval to reference the temp var and populate N/A with mean</h5>
 <pre class="r"><code># group data by interval, compute mean of steps, and store in a temp variable
 int_mean &lt;- repdt %&gt;% group_by(interval) %&gt;% summarise(mean=mean(steps,na.rm=TRUE))
 
@@ -164,6 +177,8 @@ for(i in 1:nrow(repdt_comp)) {
                 repdt_comp[i,1] &lt;- filter(int_mean,interval==as.numeric(repdt_comp[i,3]))[2]
         }       
 }</code></pre>
+</div>
+</div>
 </div>
 <div id="print-out-the-new-data-set-with-missing-values-filled-in" class="section level3">
 <h3>3. Print out the new data set with missing values filled in</h3>
