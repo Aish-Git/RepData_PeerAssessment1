@@ -1,0 +1,121 @@
+Peer Assignment 1 - Activity Monitoring Data
+============================================
+```{r LoadLibraries, echo=FALSE}
+library(dplyr, quietly = TRUE, warn.conflicts = FALSE)
+library(lubridate,quietly = TRUE,warn.conflicts = FALSE)
+library(lattice,quietly = TRUE,warn.conflicts = FALSE)
+```
+
+## Loading and preprocessing the data
+```{r LoadData}
+# Load Data - assumes that the file is in the root location
+repdt <- read.csv("activity.csv", header=TRUE)
+
+# Convert to data.frame using dplyr package
+repdt <- tbl_df(repdt)
+```
+
+
+## What is mean total number of steps taken per day?
+### 1. Total Steps Per Day
+```{r TotalSteps}
+# Compute total steps/day - group data by date, compute sum
+print(repdt %>% 
+        group_by(date) %>% 
+                summarise(total_steps_per_day=sum(steps)))
+```
+
+### 2. Histogram Plot of Total Steps Per Day
+```{r HistPlot_TotalSteps}
+# plot histogram of total steps/day - group data by date, compute sum, plot
+repdt %>% 
+        group_by(date) %>% 
+                summarise(total_steps_per_day=sum(steps)) %>% 
+                        with(hist(total_steps_per_day,col = "blue"))
+```
+
+### 3. Mean and Median of Total Steps per Day
+```{r Mean_Median_TotalSteps}
+# mean and mediam of total steps/day - group data by date, compute sum --> comp mean/med of sum
+repdt %>% 
+        group_by(date) %>% 
+                summarise(tmp=sum(steps)) %>%
+                        summarise(mean = mean(tmp,na.rm=TRUE), median=median(tmp,na.rm=TRUE))
+```
+
+
+## What is the average daily activity pattern?
+### 1. Plotting a time series of average steps/day across all days by interval
+```{r DailyActivityPattern}
+# group data by interval, compute mean of steps, and plot mean vs. interval
+repdt %>% 
+        group_by(interval) %>% 
+                summarise(mean_steps=mean(steps, na.rm=TRUE)) %>%
+                        with(plot(x=interval,y=mean_steps,type="l",las=2,main="Avg Steps/Day by Interval", xlab="Interval", ylab="Average Steps/Day (All Days)"))
+```
+
+### 2. Computing the interval with the highest average steps/day across all days
+```{r IntervalWithHighestAverageSteps}
+# group data by interval, compute mean of steps, arraneg desc by avg_steps and head(1)[1]
+repdt %>% 
+        group_by(interval) %>% 
+                summarise(mean_steps=mean(steps, na.rm=TRUE)) %>%
+                        arrange(desc(mean_steps)) %>% head(1)[1]
+```
+
+
+
+## Inputing missing values
+### 1. Total number of rows with missing data in the data set
+```{r MissingDataRows}
+# group data by interval, compute mean of steps, arraneg desc by avg_steps and head(1)[1]
+dim(filter(repdt,is.na(steps)))[1]
+```
+
+### 2. Fill missing values with mean of interval
+```{r FillMissingValues}
+# group data by interval, compute mean of steps, and store in a temp variable
+int_mean <- repdt %>% group_by(interval) %>% summarise(mean=mean(steps,na.rm=TRUE))
+
+# Fill data from temp variable
+repdt_comp <- repdt
+for(i in 1:nrow(repdt_comp)) {
+        if(is.na(repdt_comp[i,1])) {
+                repdt_comp[i,1] <- filter(int_mean,interval==as.numeric(repdt_comp[i,3]))[2]
+        }       
+}
+```
+
+###3. Print out the new data set with missing values filled in
+```{r Print repdt_comp}
+print(repdt_comp)
+```
+
+###4. Hist of data set with missing values filled in
+```{r HistPlot-CompDataSet}
+# plot histogram of total steps/day - group data by date, compute sum, plot
+repdt_comp %>% 
+        group_by(date) %>% 
+                summarise(total_steps_per_day=sum(steps)) %>% 
+                        with(hist(total_steps_per_day,col = "blue"))
+
+# mean and mediam of total steps/day - group data by date, compute sum --> comp mean/med of sum
+repdt_comp %>% 
+        group_by(date) %>% 
+                summarise(tmp=sum(steps)) %>%
+                        summarise(mean = mean(tmp), median=median(tmp))
+
+```
+#### The impact of inputting missing values is that the mean remains the same but the median is now the same as the mean whereas there is a small difference between the mean and teh median in the data set with missing values
+
+## Are there differences in activity patterns between weekdays and weekends?
+### 1. Generate TIme series plot by weekday/weekend
+``` {r SummaryByWDayEnd}
+# Add dayofweek, find out weekday or weekend, group_by daytype and interval and then plot
+repdt_comp %>%
+        mutate(dayofweek=wday(date)) %>%
+                mutate(daytype=ifelse(dayofweek==1 | dayofweek==7,"Weekend","weekday")) %>%
+                        group_by(daytype, interval) %>% summarise(mn=mean(steps)) %>%
+                                xyplot(mn~interval|daytype,data=., type="l", ylab="Average Steps/Day", main="Average Steps/Day For Weekday & WeekEnd")
+
+```
